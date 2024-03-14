@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Online KYC</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f8ff;
+        }
+
+        #video-container {
+            position: relative;
+            width: 240px;
+            height: 180px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-right: 20px;
+        }
+
+        #video {
+            width: 100%;
+            height: 100%;
+        }
+
+        #qr-result {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            box-sizing: border-box;
+            border-top: 1px solid #ccc;
+            font-size: 14px;
+        }
+
+        #capture-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #capture-button:hover {
+            background-color: #0056b3;
+        }
+
+        #user-form {
+            max-width: 300px;
+        }
+
+        #user-form input[type="text"],
+        #user-form input[type="date"],
+        #user-form button {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            box-sizing: border-box;
+            font-size: 16px;
+        }
+
+        #user-form button {
+            background-color: #28a745;
+            color: #fff;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        #user-form button:hover {
+            background-color: #218838;
+        }
+
+        input[type="hidden"] {
+            display: none;
+        }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .capture-container {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="video-container">
+        <video id="video" width="100%" height="100%" playsinline autoplay></video>
+        <div id="qr-result"></div>
+    </div>
+    <div class="capture-container">
+        <button id="capture-button" onclick="captureVideoFrame()">Capture</button>
+    </div>
+    <div class="form-container">
+        <form id="user-form" onsubmit="submitForm(event)">
+            <input type="text" name="name" placeholder="Enter Name" required>
+            <input type="text" name="aadhar" placeholder="Enter Aadhaar Number" required>
+            <input type="date" name="dob" placeholder="Enter Date of Birth" required>
+            <input type="hidden" name="capturedImage" id="capturedImage">
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        const video = document.getElementById('video');
+        const qrResult = document.getElementById('qr-result');
+        const userForm = document.getElementById('user-form');
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } })
+            .then(stream => {
+                video.srcObject = stream;
+                video.onloadedmetadata = () => {
+                    video.play();
+                };
+            })
+            .catch(error => {
+                console.error('Access to camera was denied!', error);
+            });
+
+        function submitForm(event) {
+            event.preventDefault();
+            const formData = new FormData(userForm);
+            const data = {};
+            formData.forEach((value, key) => {
+                data[key] = value;
+            });
+
+            // Display the form data
+            alert('Submitted Data:\n' + JSON.stringify(data));
+            // Clear the form fields
+            userForm.reset();
+        }
+
+        function captureVideoFrame() {
+            const canvas = document.createElement('canvas');
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const dataURL = canvas.toDataURL('image/jpeg'); // Save as .jpg
+            // Set the captured image data as the value of the hidden input field
+            document.getElementById('capturedImage').value = dataURL;
+            // You can use the dataURL here as needed (e.g., save it, display it)
+            // For demonstration, let's display it in a new window
+            const newWindow = window.open();
+            newWindow.document.write('<img src="' + dataURL + '" width="100%">');
+        }
+    </script>
+</body>
+</html>
